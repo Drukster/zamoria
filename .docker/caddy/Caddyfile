@@ -1,0 +1,47 @@
+{
+    auto_https off
+    admin off
+}
+
+:80 {
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+
+    handle /api/* {
+        root * /var/www/public
+        php_fastcgi backend:9000
+        file_server
+    }
+
+    handle /admin* {
+        root * /var/www/public
+        php_fastcgi backend:9000
+        file_server
+    }
+
+    handle /app/* {
+        reverse_proxy frontend:3000
+    }
+
+    handle /* {
+        root * /var/www/public
+        php_fastcgi backend:9000
+        file_server
+    }
+
+    encode gzip zstd
+
+    header {
+        -Server
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    handle_errors {
+        respond "Something went wrong: {err.status_code} {err.status_text}"
+    }
+}

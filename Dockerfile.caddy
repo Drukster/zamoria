@@ -1,0 +1,20 @@
+FROM caddy:2.8.4-alpine
+
+RUN apk add --no-cache \
+    curl \
+    bash
+
+RUN mkdir -p /var/log/caddy /data/caddy
+
+COPY .docker/caddy/Caddyfile /etc/caddy/Caddyfile
+
+RUN id || true && \
+    ls -la /etc/passwd | grep caddy || true && \
+    chown -R $(id -u):$(id -g) /data/caddy /var/log/caddy && \
+    chmod -R 755 /data/caddy /var/log/caddy
+
+EXPOSE 80 443
+
+# Изменили /health на /
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1

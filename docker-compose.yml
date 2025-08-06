@@ -1,0 +1,222 @@
+name: "zamoria"
+
+services:
+  frontend:
+    container_name: za-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    env_file:
+      - ./.env
+      - ./frontend/.env
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - za-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend Laravel Service
+  backend:
+    container_name: za-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        DOCKER_HOST_USER: ${DOCKER_HOST_USER:-www-data}
+        DOCKER_HOST_UID: ${DOCKER_HOST_UID:-1000}
+        DOCKER_HOST_GROUP: ${DOCKER_HOST_GROUP:-www-data}
+        DOCKER_HOST_GID: ${DOCKER_HOST_GID:-1000}
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./.docker/php/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini
+      - ./.docker/php/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./.docker/supervisor/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+    env_file:
+      - ./.env
+    environment:
+      TZ: "Europe/Moscow"
+      XDG_CONFIG_HOME: "/var/www/.config"
+      XDEBUG_CONFIG: "client_host=host.docker.internal"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - za-network
+    healthcheck:
+      test: ["CMD", "php", "-v"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Caddy Web Server
+  caddy:
+    container_name: za-caddy
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    ports:
+      - "${DOCKER_PORT_HTTP:-80}:80"
+      - "${DOCKER_PORT_HTTPS:-443}:443"
+    volumes:
+      - ./backend:/var/www
+      - ./.docker/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - za_caddy_data:/data
+      - za_caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - za-network
+    environment:
+      - CADDY_INGRESS_NETWORKS=za-network
+
+  # Laravel Scheduler
+  scheduler:
+    container_name: za-scheduler
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        DOCKER_HOST_USER: ${DOCKER_HOST_USER:-www-data}
+        DOCKER_HOST_UID: ${DOCKER_HOST_UID:-1000}
+        DOCKER_HOST_GROUP: ${DOCKER_HOST_GROUP:-www-data}
+        DOCKER_HOST_GID: ${DOCKER_HOST_GID:-1000}
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      - ./.docker/php/conf.d/app.ini:/usr/local/etc/php/conf.d/app.ini
+    env_file:
+      - ./.env
+    command: php artisan schedule:work
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - za-network
+    environment:
+      TZ: "Europe/Moscow"
+
+  # MySQL Database
+  db:
+    container_name: za-db
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      TZ: "Europe/Moscow"
+    ports:
+      - "${DOCKER_PORT_DB:-3306}:3306"
+    volumes:
+      - za_db_data:/var/lib/mysql
+      - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - za-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Redis
+  redis:
+    container_name: za-redis
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    ports:
+      - "${DOCKER_PORT_REDIS:-6379}:6379"
+    volumes:
+      - za_redis_data:/data
+      - ./.docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - za-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  # Mailpit для тестирования почты
+  mailpit:
+    container_name: za-mailpit
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    volumes:
+      - za_mailpit_data:/data
+    ports:
+      - "${DOCKER_PORT_MAILPIT_WEB:-8025}:8025"
+      - "${DOCKER_PORT_MAILPIT_SMTP:-1025}:1025"
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_WEBROOT: ""
+    networks:
+      - za-network
+
+  # phpMyAdmin для управления БД
+  phpmyadmin:
+    container_name: za-phpmyadmin
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    ports:
+      - "${DOCKER_PORT_PHPMYADMIN:-8081}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${DB_USERNAME:-laravel}
+      PMA_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - za-network
+
+  # Создание тестовой БД
+  db_create_testing:
+    container_name: za-db-testing
+    image: mysql:8.0
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: mysql -h db -u root -p'${DB_PASSWORD:-secret}' -e 'CREATE DATABASE IF NOT EXISTS testing'
+    networks:
+      - za-network
+
+volumes:
+  za_db_data:
+  za_redis_data:
+  za_caddy_data:
+  za_caddy_config:
+  za_mailpit_data:
+
+networks:
+  za-network:
+    name: zamoria-network
+    driver: bridge
