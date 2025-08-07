@@ -22,7 +22,7 @@ class WebhookController extends Controller
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
-    public function run(
+    public function __invoke(
         Nutgram $bot
     ): JsonResponse
     {

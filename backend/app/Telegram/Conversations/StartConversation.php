@@ -2,20 +2,27 @@
 
 namespace App\Telegram\Conversations;
 
-use SergiX44\Nutgram\Conversations\Conversation;
-use SergiX44\Nutgram\Nutgram;
+use SergiX44\Nutgram\Conversations\InlineMenu;
+use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 
-class StartConversation extends Conversation
+class StartConversation extends InlineMenu
 {
-    public function start(Nutgram $bot)
+    public function start(): void
     {
-        $bot->sendMessage('This is the first step!');
-        $this->next('secondStep');
-    }
+        $this->menuText("👋 Ассаляму алейкум!\n\nВыберите один из разделов:")
+            ->addButtonRow(
+                InlineKeyboardButton::make(
+                    text: '⚙️ Настройки',
+                    callback_data: 'settings'
+                )
+            )
 
-    public function secondStep(Nutgram $bot)
-    {
-        $bot->sendMessage('Bye!');
-        $this->end();
+            ->addButtonRow(
+                InlineKeyboardButton::make(
+                    text: '🆘 Поддержка',
+                    callback_data: 'support')
+            );
+
+        $this->showMenu();
     }
 }

@@ -1,18 +1,9 @@
 <?php
 /** @var SergiX44\Nutgram\Nutgram $bot */
 
-use SergiX44\Nutgram\Nutgram;
+use App\Http\Middleware\VerifyTelegramUser;
+use App\Telegram\Conversations\StartConversation;
 
-/*
-|--------------------------------------------------------------------------
-| Nutgram Handlers
-|--------------------------------------------------------------------------
-|
-| Here is where you can register telegram handlers for Nutgram. These
-| handlers are loaded by the NutgramServiceProvider. Enjoy!
-|
-*/
+$bot->middleware(VerifyTelegramUser::class);
 
-$bot->onCommand('start', function (Nutgram $bot) {
-    $bot->sendMessage('Hello, world!');
-})->description('The start command!');
+$bot->onCommand('start', StartConversation::class);
