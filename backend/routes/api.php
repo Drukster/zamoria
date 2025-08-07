@@ -5,8 +5,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('telegram')->group(function () {
-        Route::controller(WebhookController::class)->group(function () {
-            Route::post('/webhook', 'run');
-        });
+        Route::post('/webhook', WebhookController::class);
     });
 });
