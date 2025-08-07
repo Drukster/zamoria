@@ -4,7 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TelegramUserResource\Pages;
 use App\Models\TelegramUser;
-use Filament\Forms\Form;
+use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -15,6 +19,51 @@ class TelegramUserResource extends Resource
     protected static ?string $navigationGroup = 'Пользователи';
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $pluralLabel = 'Пользователи';
+    protected static ?string $label = 'телеграм пользователя';
+
+    public static function infolist(
+        Infolist $infolist
+    ): Infolist
+    {
+        return $infolist
+            ->schema([
+                Grid::make()
+                    ->columns(12)
+                    ->schema([
+                        Section::make('Основная информация')
+                            ->columnSpan(8)
+                            ->columns(2)
+                            ->schema([
+                                TextEntry::make('id')
+                                    ->badge()
+                                    ->translateLabel(),
+                                TextEntry::make('telegram_id')
+                                    ->badge()
+                                    ->translateLabel(),
+                                TextEntry::make('first_name')
+                                    ->translateLabel(),
+                                TextEntry::make('last_name')
+                                    ->translateLabel(),
+                                TextEntry::make('username')
+                                    ->translateLabel(),
+                            ]),
+                        Section::make('Дополнительная информация')
+                            ->columnSpan(4)
+                            ->schema([
+                                IconEntry::make('is_premium')
+                                    ->translateLabel()
+                                    ->alignCenter()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle'),
+                                IconEntry::make('is_active')
+                                    ->translateLabel()
+                                    ->alignCenter()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle')
+                            ])
+                    ])
+            ]);
+    }
 
     public static function table(
         Table $table
@@ -24,28 +73,43 @@ class TelegramUserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->translateLabel()
+                    ->disabledClick()
+                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('telegram_id')
+                    ->translateLabel()
+                    ->badge()
+                    ->disabledClick()
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('first_name')
-                    ->translateLabel(),
+                    ->translateLabel()
+                    ->disabledClick(),
                 Tables\Columns\TextColumn::make('last_name')
-                    ->translateLabel(),
+                    ->translateLabel()
+                    ->disabledClick(),
                 Tables\Columns\TextColumn::make('username')
-                    ->translateLabel(),
+                    ->translateLabel()
+                    ->disabledClick(),
                 Tables\Columns\IconColumn::make('is_active')
-                    ->translateLabel(),
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->translateLabel()
+                    ->disabledClick()
+                    ->alignCenter(),
                 Tables\Columns\IconColumn::make('is_premium')
-                    ->translateLabel(),
+                    ->translateLabel()
+                    ->disabledClick()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->alignCenter(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->translateLabel()
+                    ->disabledClick()
                     ->date(),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\DeleteAction::make()
-                        ->modalHeading(__('telegram.users.delete'))
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\DeleteAction::make(),
                 ])
             ]);
     }
