@@ -1,4 +1,4 @@
-.PHONY: help setup build up down restart logs clean install-backend install-frontend shell-backend shell-frontend db-migrate db-fresh test
+.PHONY: help setup build up down restart logs clean install-backend install-frontend shell-backend shell-frontend db-migrate db-migrate-rollback db-fresh test
 
 # Цвета для вывода
 YELLOW := \033[33m
@@ -28,6 +28,7 @@ setup: ## 🛠️ Полная настройка проекта (первый �
 	@$(MAKE) install-backend
 	@$(MAKE) install-frontend
 	@$(MAKE) db-migrate
+	@$(MAKE) db-migrate-rollback
 	@echo ""
 	@echo "$(GREEN)✅ Настройка завершена!$(RESET)"
 	@$(MAKE) info
@@ -94,6 +95,9 @@ shell-db: ## 🐚 Войти в MySQL консоль
 db-migrate: ## 🗃️ Запустить миграции
 	@echo "$(YELLOW)🗃️ Запускаем миграции...$(RESET)"
 	@docker-compose exec -T backend php artisan migrate --force
+db-migrate-rollback: ## Откатить миграцию
+	@echo "$(YELLOW) Откат миграций... $(RESET)"
+	@docker-compose exec -T backend php artisan migrate:rollback
 
 db-fresh: ## 🆕 Пересоздать базу данных с сидами
 	@echo "$(YELLOW)🆕 Пересоздаем базу данных...$(RESET)"
@@ -138,6 +142,7 @@ info: ## ℹ️ Показать информацию о сервисах
 	@echo "  • $(BLUE)make shell-backend$(RESET)       - войти в backend контейнер"
 	@echo "  • $(BLUE)make shell-frontend$(RESET)      - войти в frontend контейнер"
 	@echo "  • $(BLUE)make db-migrate$(RESET)          - запустить миграции"
+	@echo "  • $(BLUE)make db-migrate-rollback$(RESET) - откатить миграцию"
 	@echo "  • $(BLUE)make test$(RESET)                - запустить тесты"
 	@echo "  • $(BLUE)make down$(RESET)                - остановить сервисы"
 	@echo ""
