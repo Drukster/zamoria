@@ -31,7 +31,7 @@ class Category extends Model
     public function duas(): HasMany
     {
         return $this->hasMany(
-            Category::class
+            Dua::class
         );
     }
 }
