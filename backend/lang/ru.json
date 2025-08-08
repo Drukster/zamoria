@@ -55,5 +55,9 @@
     "Created at": "Создан в",
     "Telegram id": "ID Телеграм",
     "Title": "Название",
-    "Slug": "Слаг"
+    "Slug": "Слаг",
+    "Content": "Контент",
+    "Translation": "Перевод",
+    "Transliteration": "Транслитерация",
+    "Arabic text": "Арабский текст"
 }

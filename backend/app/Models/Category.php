@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -26,4 +27,11 @@ class Category extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    public function duas(): HasMany
+    {
+        return $this->hasMany(
+            Category::class
+        );
+    }
 }
