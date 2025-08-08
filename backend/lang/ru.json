@@ -53,6 +53,11 @@
     "Is premium": "Премиум",
     "Is active": "Активность",
     "Created at": "Создан в",
-    "Telegram id": "ID Телеграм"
-
+    "Telegram id": "ID Телеграм",
+    "Title": "Название",
+    "Slug": "Слаг",
+    "Content": "Контент",
+    "Translation": "Перевод",
+    "Transliteration": "Транслитерация",
+    "Arabic text": "Арабский текст"
 }
