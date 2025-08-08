@@ -4,6 +4,7 @@ namespace App\UseCases\Queries;
 
 use App\DTO\Queries\CategoryQueryBySlugDTO;
 use App\Models\Category;
+use App\Models\Dua;
 use App\Utils\OperationResult;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,6 +30,7 @@ class CategoryQueryBySlug
 
         $record = Category::query()
             ->where('slug', $data->slug)
+            ->with(['duas'])
             ->first();
 
         $result = $this->transform(
@@ -48,6 +50,16 @@ class CategoryQueryBySlug
             'id' => $record->id,
             'title' => $record->title,
             'slug' => $record->slug,
+            'duas' => $record->duas->map(function (Dua $record) {
+                return [
+                    'id' => $record->id,
+                    'title' => $record->title,
+                    'content' => $record->content,
+                    'arabicText' => $record->arabic_text,
+                    'translation' => $record->translation,
+                    'transliteration' => $record->transliteration,
+                ];
+            })
         ];
     }
 }
