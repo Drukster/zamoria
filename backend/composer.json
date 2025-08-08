@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "nutgram/laravel": "^1.5",
+        "spatie/laravel-data": "^4.17",
         "symfony/dom-crawler": "^7.3"
     },
     "require-dev": {
