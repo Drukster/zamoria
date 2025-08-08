@@ -4,6 +4,7 @@ namespace App\Telegram\Conversations;
 
 use SergiX44\Nutgram\Conversations\InlineMenu;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
+use SergiX44\Nutgram\Telegram\Types\WebApp\WebAppInfo;
 
 class StartConversation extends InlineMenu
 {
@@ -12,8 +13,8 @@ class StartConversation extends InlineMenu
         $this->menuText("👋 Ассаляму алейкум!\n\nВыберите один из разделов:")
             ->addButtonRow(
                 InlineKeyboardButton::make(
-                    text: '⚙️ Настройки',
-                    callback_data: 'settings'
+                    text: 'Работаем братья, работаем!',
+                    web_app: new WebAppInfo('https://revolution-paste-hood-motherboard.trycloudflare.com')
                 )
             )
 
