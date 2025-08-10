@@ -34,4 +34,13 @@ class TelegramUser extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function supportRequests()
+    {
+        return $this->hasMany(
+            SupportRequest::class,
+            'telegram_user_id',
+            'telegram_id'
+        );
+    }
 }
